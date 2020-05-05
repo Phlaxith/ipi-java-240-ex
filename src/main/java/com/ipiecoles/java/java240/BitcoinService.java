@@ -1,18 +1,25 @@
 package com.ipiecoles.java.java240;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 
+@Service
+@Qualifier("cache")
 public class BitcoinService {
 
     private Double rate = null;
 
-    private Boolean forceRefresh = false;
+    private Boolean forceRefresh;
 
+    @Autowired
     private WebPageManager webPageManager;
 
-    public BitcoinService(WebPageManager webPageManager) {
-        this.webPageManager = webPageManager;
-    }
+    @Value("${bitcoinService.rateUrl}")
+    private String rateUrl;
 
     /**
      * Méthode qui renvoie le cours du Bitcoin
@@ -20,9 +27,6 @@ public class BitcoinService {
      * @throws IOException si impossible d'accéder à la bourse
      */
     public Double getBitcoinRate() throws IOException {
-//        if(webPageManager == null) {
-//            webPageManager = new WebPageManager();
-//        }
 
         if(rate != null && !forceRefresh){
             System.out.println("Récupération du cours du bitcoin en cache...");
@@ -31,7 +35,7 @@ public class BitcoinService {
 
         System.out.println("Récupération du cours du bitcoin sur site distant");
 
-        String apiResponse = webPageManager.getPageContents("https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=EUR");
+        String apiResponse = webPageManager.getPageContents(rateUrl);
         apiResponse = apiResponse.replace("{\"EUR\":","");
         apiResponse = apiResponse.replace("}","");
         rate = Double.parseDouble(apiResponse);
@@ -51,4 +55,11 @@ public class BitcoinService {
         return prixEnEuro / rate;
     }
 
+    public Boolean getForceRefresh() {
+        return forceRefresh;
+    }
+
+    public void setForceRefresh(Boolean forceRefresh) {
+        this.forceRefresh = forceRefresh;
+    }
 }
